@@ -1,0 +1,49 @@
+```gitignore
+# CMake build directories and files
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+cmake-build-*/
+
+# Compiled object and binary files
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.exe
+*.out
+*.d
+*.lib
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+*~
+*.log
+.DS_Store
+Thumbs.db
+
+# JetBrains IDEs (CLion, etc.)
+cmake-build-debug/
+cmake-build-release/
+cmake-build-dist/
+cmake-build-test/
+
+# Visual Studio files and folders
+*.sln
+*.vcxproj*
+*.pdb
+*.user
+*.opensdf
+*.sdf
+*.ipch
+.vs/
+
+# Other
+*.bak
+*.tmp
+*.gch
+```
