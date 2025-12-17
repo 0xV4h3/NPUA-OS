@@ -2,15 +2,19 @@
 set -eo pipefail
 
 BUILD_DIR="build"
+SRC_DIR="$(dirname "$0")"
+
+if [[ ! -f "$SRC_DIR/CMakeLists.txt" ]]; then
+	echo "[build.sh] CMakeLists.txt not found in $SRC_DIR" >&2
+	exit 1
+fi
+
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-echo "[build.sh] Compiling sources..."
-gcc ../unix_stream_server.c -o unix_stream_server
-gcc ../unix_stream_client.c -o unix_stream_client
-gcc ../unix_stream_server_no_remove.c -o unix_stream_server_no_remove
-
-gcc ../unix_datagram_server.c -o unix_datagram_server
-gcc ../unix_datagram_client.c -o unix_datagram_client
+echo "[build.sh] Running cmake ..."
+cmake ..
+echo "[build.sh] Running make ..."
+make
 
 echo "[build.sh] Build finished. Executables are in $BUILD_DIR/"

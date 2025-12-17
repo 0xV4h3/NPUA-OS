@@ -18,7 +18,10 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Removed the remove(SV_SOCK_PATH) section for step 2
+    // if (remove(SV_SOCK_PATH) == -1 && errno != ENOENT) {
+    //     fprintf(stderr, "remove-%s error", SV_SOCK_PATH);
+    //     exit(EXIT_FAILURE);
+    // }
 
     memset(&addr, 0, sizeof(struct sockaddr_un));
     addr.sun_family = AF_UNIX;
@@ -30,6 +33,7 @@ int main(int argc, char *argv[])
         } else {
             fprintf(stderr, "bind error\n");
         }
+
         exit(EXIT_FAILURE);
     }
 
@@ -40,20 +44,26 @@ int main(int argc, char *argv[])
 
     for (;;) {
         cfd = accept(sfd, NULL, NULL);
+
         if (cfd == -1) {
             fprintf(stderr, "accept error\n");
             exit(EXIT_FAILURE);
         }
+
+        /* Transfer data from connected socket to stdout until EOF */
+
         while ((numRead = read(cfd, buf, BUF_SIZE)) > 0) {
             if (write(STDOUT_FILENO, buf, numRead) != numRead) {
                 fprintf(stderr, "partial/failed write\n");
                 exit(EXIT_FAILURE);
             }
         }
+
         if (numRead == -1) {
             fprintf(stderr, "read error\n");
             exit(EXIT_FAILURE);
         }
+
         if (close(cfd) == -1) {
             fprintf(stderr, "close error\n");
             exit(EXIT_FAILURE);

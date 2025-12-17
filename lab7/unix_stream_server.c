@@ -1,21 +1,16 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#include <string.h>
-#include <sys/select.h>
 #include "unix_stream.h"
 #define BACKLOG 5
-#define MAX_CLIENTS  FD_SETSIZE
 
 int main(int argc, char *argv[])
 {
     struct sockaddr_un addr;
-    int sfd, cfd, i, maxfd, nready, client[MAX_CLIENTS];
+    int sfd, cfd;
     ssize_t numRead;
     char buf[BUF_SIZE];
-    fd_set allset, rset;
 
     sfd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sfd == -1) {
@@ -38,6 +33,7 @@ int main(int argc, char *argv[])
         } else {
             fprintf(stderr, "bind error\n");
         }
+
         exit(EXIT_FAILURE);
     }
 
@@ -46,66 +42,31 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    for (i = 0; i < MAX_CLIENTS; i++)
-        client[i] = -1;
-
-    FD_ZERO(&allset);
-    FD_SET(sfd, &allset);
-    maxfd = sfd;
-
     for (;;) {
-        rset = allset;
-        nready = select(maxfd + 1, &rset, NULL, NULL, NULL);
-        if (nready == -1) {
-            perror("select error");
+        cfd = accept(sfd, NULL, NULL);
+
+        if (cfd == -1) {
+            fprintf(stderr, "accept error\n");
             exit(EXIT_FAILURE);
         }
 
-        if (FD_ISSET(sfd, &rset)) {
-            cfd = accept(sfd, NULL, NULL);
-            if (cfd == -1) {
-                fprintf(stderr, "accept error\n");
+        /* Transfer data from connected socket to stdout until EOF */
+
+        while ((numRead = read(cfd, buf, BUF_SIZE)) > 0) {
+            if (write(STDOUT_FILENO, buf, numRead) != numRead) {
+                fprintf(stderr, "partial/failed write\n");
                 exit(EXIT_FAILURE);
             }
-            for (i = 0; i < MAX_CLIENTS; i++) {
-                if (client[i] < 0) {
-                    client[i] = cfd;
-                    break;
-                }
-            }
-            if (i == MAX_CLIENTS) {
-                fprintf(stderr, "too many clients\n");
-                close(cfd);
-            } else {
-                FD_SET(cfd, &allset);
-                if (cfd > maxfd) maxfd = cfd;
-            }
-            if (--nready <= 0) continue;
         }
 
-        for (i = 0; i < MAX_CLIENTS; i++) {
-            int sockfd;
-            if ((sockfd = client[i]) < 0) continue;
-            if (FD_ISSET(sockfd, &rset)) {
-                numRead = read(sockfd, buf, BUF_SIZE);
-                if (numRead <= 0) {
-                    if (numRead < 0) perror("read error");
-                    close(sockfd);
-                    FD_CLR(sockfd, &allset);
-                    client[i] = -1;
-                } else {
-                    // Broadcast to all other clients
-                    for (int j = 0; j < MAX_CLIENTS; j++) {
-                        int outfd = client[j];
-                        if (outfd >= 0 && outfd != sockfd) {
-                            if (write(outfd, buf, numRead) != numRead) {
-                                perror("broadcast write error");
-                            }
-                        }
-                    }
-                }
-                if (--nready <= 0) break;
-            }
+        if (numRead == -1) {
+            fprintf(stderr, "read error\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (close(cfd) == -1) {
+            fprintf(stderr, "close error\n");
+            exit(EXIT_FAILURE);
         }
     }
 }

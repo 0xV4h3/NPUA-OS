@@ -5,7 +5,11 @@ set(CMAKE_C_STANDARD 99)
 
 add_executable(unix_stream_server unix_stream_server.c unix_stream.h)
 add_executable(unix_stream_client unix_stream_client.c unix_stream.h)
+add_executable(unix_stream_client_echo unix_stream_client_echo.c unix_stream.h)
+add_executable(unix_stream_client_chat unix_stream_client_chat.c unix_stream.h)
 add_executable(unix_stream_server_no_remove unix_stream_server_no_remove.c unix_stream.h)
+add_executable(unix_stream_server_echo unix_stream_server_echo.c unix_stream.h)
+add_executable(unix_stream_server_chat unix_stream_server_chat.c unix_stream.h)
 
 add_executable(unix_datagram_server unix_datagram_server.c unix_datagram.h)
 add_executable(unix_datagram_client unix_datagram_client.c unix_datagram.h)
