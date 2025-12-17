@@ -12,14 +12,10 @@ int main(int argc, char *argv[])
 
     /* Create a datagram socket bound to an address in the IPv6 domain */
 
-
     sfd = socket(AF_INET6, SOCK_DGRAM, 0);
     if (sfd == -1) {
         errExit("socket");
     }
-
-    int optval = 1;
-    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
     memset(&svaddr, 0, sizeof(struct sockaddr_in6));
     svaddr.sin6_family = AF_INET6;
